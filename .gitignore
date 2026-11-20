@@ -1,0 +1,13 @@
+.env
+**/bin/
+**/obj/
+.vs/
+.vscode/
+TestResults/
+coverage/
+*.user
+*.suo
+.DS_Store
+node_modules/
+playwright-report/
+test-results/

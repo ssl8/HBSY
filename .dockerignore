@@ -1,0 +1,9 @@
+.git
+**/bin
+**/obj
+**/TestResults
+.env
+*.zip
+node_modules
+playwright-report
+test-results

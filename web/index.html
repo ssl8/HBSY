@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NOVA HBYS — Kurumsal Hastane Bilgi Yönetim Sistemi</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <section id="login-screen" class="login-shell">
+    <div class="login-hero">
+      <div class="brand-lockup">
+        <span class="brand-badge">NOVA HBYS</span>
+        <span class="brand-ver">v4.0 ENTERPRISE</span>
+      </div>
+      <h1>Akıllı Hastane Klinik, LİS/PACS &amp; Ulusal Sağlık Kapısı</h1>
+      <p class="hero-lead">
+        Hasta 360° EMR, NEWS2 erken uyarı, ilaç–alerji CDS, HL7 v2.5.1 ORU^R01 ve KVKK uyumlu SHA-256 denetim zinciri tek platformda.
+      </p>
+      <div class="hero-pills">
+        <span class="hero-pill">OIDC PKCE + RBAC</span>
+        <span class="hero-pill">HL7 v2.5.1 / PACS DICOM</span>
+        <span class="hero-pill">MHRS · MEDULA · e-Nabız · 112 ULAK</span>
+      </div>
+      <div id="login-env-badge" class="env-badge">MOD YÜKLENİYOR...</div>
+    </div>
+
+    <div class="login-card">
+      <div class="login-card-head">
+        <h2>Sisteme Giriş</h2>
+        <p>Yetkili hastane personeli oturumu</p>
+      </div>
+
+      <section class="quick-login-section hidden">
+        <div class="quick-login-title">Hızlı Rol Seçimi (Demo Modu)</div>
+        <div id="quick-login-grid" class="quick-login-grid"></div>
+      </section>
+
+      <div id="login-divider" class="login-divider hidden"><span>veya rol seçerek giriş yapın</span></div>
+
+      <form id="login-form" class="login-form">
+        <label id="login-demo-role-wrap" class="field hidden">
+          <span>Kullanıcı Rolü</span>
+          <select id="login-demo-role" name="role">
+            <option value="admin">Sistem Yöneticisi (admin)</option>
+            <option value="doctor">Hekim — Kardiyoloji (doctor)</option>
+            <option value="nurse">Klinik Hemşiresi (nurse)</option>
+            <option value="lab">LİS / Laboratuvar Uzmanı (lab)</option>
+            <option value="radiology">Radyoloji / PACS (radiology)</option>
+            <option value="pharmacist">Eczacı (pharmacist)</option>
+            <option value="billing">Faturalama &amp; MEDULA (billing)</option>
+            <option value="registrar">Hasta Kayıt / Kabul (registrar)</option>
+            <option value="integration">Entegrasyon Mühendisi (integration)</option>
+          </select>
+        </label>
+
+        <div id="login-error" class="form-error hidden"></div>
+
+        <button type="submit" class="btn btn-primary btn-block">Oturum Aç</button>
+      </form>
+
+      <div id="demo-credentials-box" class="demo-creds hidden">
+        <strong>Demo Modu Etkin:</strong> Tek tıkla herhangi bir hastane personeli rolüne geçiş yapabilir veya üst menüden canlı rol değiştirebilirsiniz.
+      </div>
+    </div>
+  </section>
+
+  <div id="app-shell" class="app-shell hidden">
+    <aside id="app-sidebar" class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-lockup">
+          <span class="brand-badge">NOVA HBYS</span>
+          <span class="brand-ver">v4.0</span>
+        </div>
+        <div class="status-pill">ÇEVRİMİÇİ</div>
+      </div>
+
+      <nav id="main-nav" class="nav main-nav" aria-label="Ana Menü"></nav>
+
+      <div class="sidebar-role-panel hidden">
+        <div class="sidebar-role-head">
+          <span>Aktif Demo Rolü</span>
+          <span id="sidebar-role-badge" class="badge badge-info">admin</span>
+        </div>
+        <select id="sidebar-role-select" aria-label="Demo Rolü Seç">
+          <option value="admin">Sistem Yöneticisi</option>
+          <option value="doctor">Hekim</option>
+          <option value="nurse">Hemşire</option>
+          <option value="lab">Laboratuvar (LİS)</option>
+          <option value="radiology">Radyoloji (PACS)</option>
+          <option value="pharmacist">Eczacı</option>
+          <option value="billing">Faturalama</option>
+          <option value="registrar">Hasta Kayıt</option>
+          <option value="integration">Entegrasyon</option>
+        </select>
+      </div>
+
+      <div class="user-card sidebar-user">
+        <div id="user-avatar" class="avatar">SY</div>
+        <div class="user-meta user-info">
+          <strong id="user-name">-</strong>
+          <span id="user-role">-</span>
+        </div>
+        <button type="button" id="logout-btn" class="btn btn-ghost btn-sm" title="Oturumu Kapat">Çıkış</button>
+      </div>
+    </aside>
+
+    <div id="sidebar-backdrop" class="sidebar-backdrop hidden"></div>
+
+    <main class="main main-area">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button type="button" id="btn-mobile-nav" class="icon-btn mobile-nav-toggle" aria-label="Menüyü Aç">☰</button>
+          <div id="page-crumb" class="crumb">Genel Bakış</div>
+        </div>
+        <div class="topbar-right">
+          <button type="button" id="btn-open-search" class="btn btn-ghost btn-sm search-trigger" title="Hızlı Arama (Ctrl/Cmd+K)">
+            <span>🔍 Hızlı Ara</span>
+            <kbd>Ctrl+K</kbd>
+          </button>
+          <div class="role-switcher-wrap hidden">
+            <label class="sr-only" for="demo-role-select">Rol Değiştir</label>
+            <select id="demo-role-select" title="Canlı Rol Değiştir">
+              <option value="admin">Sistem Yöneticisi</option>
+              <option value="doctor">Hekim</option>
+              <option value="nurse">Hemşire</option>
+              <option value="lab">Laboratuvar</option>
+              <option value="radiology">Radyoloji</option>
+              <option value="pharmacist">Eczacı</option>
+              <option value="billing">Faturalama</option>
+              <option value="registrar">Hasta Kayıt</option>
+              <option value="integration">Entegrasyon</option>
+            </select>
+          </div>
+          <span id="top-user-name" class="top-user"></span>
+          <span id="top-date" class="top-date"></span>
+        </div>
+      </header>
+
+      <div class="demo-banner hidden">
+        <div>
+          <strong>Demo Eğitim Ortamı</strong>
+          <span>Rol değiştirerek RBAC davranışını ve canlı entegrasyon simülasyonunu test edebilirsiniz.</span>
+        </div>
+        <div class="demo-banner-actions">
+          <button type="button" class="btn btn-primary btn-sm hidden" id="btn-toggle-sim" title="Tüm sistemin canlı akış simülasyonunu başlat">⚡ Canlı Simülasyon</button>
+          <button type="button" class="btn btn-ghost btn-sm hidden" id="btn-quick-reset" title="Tüm demo verilerini orijinal haline sıfırla">↺ Sıfırla</button>
+        </div>
+      </div>
+
+      <div id="sim-control-bar" class="sim-control-bar hidden">
+        <div class="sim-bar-status">
+          <span class="sim-pulse-dot" id="sim-status-dot"></span>
+          <div>
+            <div class="sim-status-badge" id="sim-status-title">HİBRİT DEMO MODU: HAZIR</div>
+            <div class="sim-status-desc" id="sim-status-sub">Tüm hastane birimleri ve dış sistemler tam otomatik simülasyona hazır</div>
+          </div>
+        </div>
+        <div class="sim-ticker-wrap">
+          <span class="sim-ticker-label">CANLI AKIŞ:</span>
+          <div class="sim-ticker-content" id="sim-ticker-text">Simülasyonu başlatarak MHRS, MEDULA, Klinik, LİS, PACS, Eczane, Acil 112, Yatak ve e-Nabız döngüsünü canlı izleyin.</div>
+        </div>
+        <div class="sim-bar-actions">
+          <button type="button" class="btn btn-success btn-sm" id="btn-sim-play">▶ Simülasyonu Başlat</button>
+          <button type="button" class="btn btn-amber btn-sm hidden" id="btn-sim-pause">⏸ Duraklat (Müdahale Et)</button>
+          <button type="button" class="btn btn-light btn-sm hidden" id="btn-sim-step">⚡ Sonraki Adım</button>
+          <button type="button" class="btn btn-danger btn-sm hidden" id="btn-sim-stop">⏹ İptal Et</button>
+        </div>
+      </div>
+
+      <div id="sim-progress-track" class="sim-progress-track hidden">
+        <div id="sim-progress-fill" class="sim-progress-fill"></div>
+      </div>
+
+      <div id="page-content" class="content page-content"></div>
+    </main>
+  </div>
+
+  <dialog id="modal" class="modal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <div id="modal-eyebrow" class="section-kicker">İŞLEM</div>
+          <h2 id="modal-title">Detay</h2>
+        </div>
+        <button type="button" id="modal-close" class="icon-btn modal-close" aria-label="Kapat">×</button>
+      </div>
+      <div id="modal-body"></div>
+    </div>
+  </dialog>
+
+  <dialog id="command-palette" class="modal cp-dialog" aria-label="Hızlı Arama"></dialog>
+
+  <dialog id="sim-guard-modal" class="modal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <div class="section-kicker">SİMÜLASYON KORUMASI</div>
+          <h2>Canlı Simülasyon Çalışıyor</h2>
+        </div>
+        <button type="button" class="icon-btn modal-close" id="sim-guard-close" aria-label="Kapat">×</button>
+      </div>
+      <div id="sim-guard-body" class="sim-guard-body">
+        <div class="sim-guard-box">
+          <div class="sim-guard-icon">⚠️</div>
+          <p>Otomatik hastane akış simülasyonu şu anda aktif. Manuel veri girişi yapabilmek için simülasyonu duraklatmanız veya durdurmanız gerekir.</p>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-ghost" type="button" id="sim-guard-resume">Simülasyona Devam Et</button>
+          <button class="btn btn-danger" type="button" id="sim-guard-stop-btn">⏹ Simülasyonu İptal Et</button>
+          <button class="btn btn-primary" type="button" id="sim-guard-pause-btn">⏸ Simülasyonu Duraklat &amp; Müdahale Et</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <aside id="sim-presentation-hud" class="sim-presentation-hud hidden">
+    <div class="sim-hud-header">
+      <div class="sim-hud-title-wrap">
+        <span class="sim-hud-live-tag">CANLI SİSTEM TURU</span>
+        <span class="sim-hud-step-pill" id="sim-hud-step-badge">ADIM 1 / 12</span>
+      </div>
+      <div class="sim-hud-gateway-badge" id="sim-hud-gateway">Sağlık Bakanlığı MHRS</div>
+    </div>
+    <div class="sim-hud-body">
+      <div class="sim-hud-actor-row">
+        <span class="sim-hud-role-icon" id="sim-hud-icon">👨‍⚕️</span>
+        <div>
+          <strong id="sim-hud-actor">Aktif Persona: Uzm. Dr. Mehmet Kaya</strong>
+          <small id="sim-hud-dept">Birim: Poliklinik Muayenesi</small>
+        </div>
+      </div>
+      <div class="sim-hud-action-text" id="sim-hud-text"></div>
+    </div>
+    <div class="sim-hud-countdown-wrap">
+      <div class="sim-hud-countdown-bar"><div class="sim-hud-countdown-fill" id="sim-hud-countdown"></div></div>
+      <span class="sim-hud-countdown-label" id="sim-hud-timer-label">Sonraki Adım: 4s</span>
+    </div>
+    <div class="sim-hud-controls">
+      <button class="btn btn-amber btn-sm" id="btn-hud-pause" type="button">⏸ Duraklat (Müdahale Et)</button>
+      <button class="btn btn-light btn-sm" id="btn-hud-step" type="button">⚡ Sonraki Adım</button>
+      <button class="btn btn-danger btn-sm" id="btn-hud-stop" type="button">⏹ Durdur</button>
+    </div>
+  </aside>
+
+  <div id="patient-360-backdrop" class="drawer-backdrop hidden"></div>
+  <aside id="patient-360-drawer" class="slide-drawer hidden" aria-hidden="true">
+    <div id="patient-360-body" class="drawer-inner"></div>
+  </aside>
+
+  <div id="toast-region" class="toast-region" aria-live="polite"></div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
