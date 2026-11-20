@@ -62,26 +62,25 @@ function decodeJwt(jwt) {
   };
 }
 
-async function fetchJwks(issuer, forceRefresh = false) {
-  const url = `${issuer}/protocol/openid-connect/certs`;
-  const cached = jwksCache.get(url);
+async function fetchJwks(jwksUrl, forceRefresh = false) {
+  const cached = jwksCache.get(jwksUrl);
   if (cached && !forceRefresh && Date.now() - cached.fetchedAt < 300_000) {
     return cached.keys;
   }
-  const resp = await fetch(url, { cache: 'no-store' });
+  const resp = await fetch(jwksUrl, { cache: 'no-store' });
   if (!resp.ok) throw new Error(`JWKS anahtarları alınamadı (${resp.status}).`);
   const data = await resp.json();
   const keys = Array.isArray(data.keys) ? data.keys : [];
-  jwksCache.set(url, { keys, fetchedAt: Date.now() });
+  jwksCache.set(jwksUrl, { keys, fetchedAt: Date.now() });
   return keys;
 }
 
-async function findVerificationKey(issuer, kid) {
-  let keys = await fetchJwks(issuer, false);
-  let jwk = keys.find(k => (!kid || k.kid === kid) && k.kty === 'RSA' && (!k.use || k.use === 'sig'));
+async function findVerificationKey(jwksUrl, kid) {
+  let keys = await fetchJwks(jwksUrl, false);
+  let jwk = keys.find(k => (!kid || k.kid === kid) && k.kty === 'RSA' && (!k.use || k.use === 'sig') && (!k.alg || k.alg === 'RS256'));
   if (!jwk) {
-    keys = await fetchJwks(issuer, true);
-    jwk = keys.find(k => (!kid || k.kid === kid) && k.kty === 'RSA' && (!k.use || k.use === 'sig'));
+    keys = await fetchJwks(jwksUrl, true);
+    jwk = keys.find(k => (!kid || k.kid === kid) && k.kty === 'RSA' && (!k.use || k.use === 'sig') && (!k.alg || k.alg === 'RS256'));
   }
   if (!jwk) throw new Error('Token imzası için eşleşen JWKS RSA anahtarı bulunamadı.');
   return crypto.subtle.importKey(
@@ -98,7 +97,8 @@ async function verifyJwtRs256(jwt, issuer, opts = {}) {
   if (header.alg !== 'RS256') {
     throw new Error(`Desteklenmeyen JWT algoritması: ${header.alg || 'yok'}`);
   }
-  const cryptoKey = await findVerificationKey(issuer, header.kid);
+  const jwksUrl = opts.jwksUri || `${issuer}/protocol/openid-connect/certs`;
+  const cryptoKey = await findVerificationKey(jwksUrl, header.kid);
   const validSig = await crypto.subtle.verify(
     'RSASSA-PKCS1-v1_5',
     cryptoKey,
@@ -149,7 +149,10 @@ function getOidcSettings() {
   const issuer = String(raw.issuer || 'http://localhost:8080/realms/hbys').replace(/\/+$/, '');
   const clientId = String(raw.clientId || 'hbys-web');
   const redirectUri = new URL(raw.redirectUri || '/', window.location.origin).toString();
-  return { issuer, clientId, redirectUri };
+  const jwksUri = raw.jwksUri
+    ? new URL(raw.jwksUri, window.location.origin).toString()
+    : `${issuer}/protocol/openid-connect/certs`;
+  return { issuer, clientId, redirectUri, jwksUri };
 }
 
 function normalizeUser(userPayload, claims = {}) {
@@ -187,12 +190,13 @@ async function exchangeToken(paramsObj) {
 }
 
 async function validateAndStoreOidcTokens(tokenResponse, expectedNonce = null) {
-  const { issuer, clientId } = getOidcSettings();
+  const { issuer, clientId, jwksUri } = getOidcSettings();
   if (!tokenResponse.access_token) throw new Error('OIDC access_token alınamadı.');
 
   const accessClaims = await verifyJwtRs256(tokenResponse.access_token, issuer, {
     allowedAudiences: ['hbys-api', clientId],
-    clientId
+    clientId,
+    jwksUri
   });
 
   let idClaims = {};
@@ -200,7 +204,8 @@ async function validateAndStoreOidcTokens(tokenResponse, expectedNonce = null) {
     idClaims = await verifyJwtRs256(tokenResponse.id_token, issuer, {
       allowedAudiences: [clientId],
       clientId,
-      expectedNonce
+      expectedNonce,
+      jwksUri
     });
   } else if (expectedNonce) {
     throw new Error('OIDC id_token alınamadı; nonce doğrulanamıyor.');

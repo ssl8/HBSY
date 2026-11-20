@@ -102,7 +102,7 @@ services:
       HBYS_AUTH: oidc
       OIDC_ISSUER: ${HBYS_PUBLIC_ISSUER:?Run start-windows.bat to generate .env}
       OIDC_CLIENT_ID: hbys-web
-      HBYS_ENABLE_SIMULATION: "true"
+      HBYS_ENABLE_SIMULATION: ${HBYS_ENABLE_SIMULATION:-false}
       ConnectionStrings__Default: Host=postgres;Port=5432;Database=hbys;Username=patient_svc;Password=${PATIENT_DB_PASSWORD:?Missing PATIENT_DB_PASSWORD};Pooling=true;Minimum Pool Size=0;Maximum Pool Size=8;Timeout=15;Command Timeout=30;Application Name=patient-svc
     depends_on:
       db-migrate:

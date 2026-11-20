@@ -35,6 +35,7 @@ test('runtime config advertises enterprise OIDC PKCE without demo shortcuts', as
   expect(cfg.oidc?.clientId).toBe('hbys-web');
 
   await page.goto('/');
+  await page.waitForURL(url => url.port === '8080' && url.pathname.includes('/protocol/openid-connect/auth'), { timeout: 30_000 });
   await page.waitForURL(url => url.port === '8088' && url.pathname === '/', { timeout: 30_000 });
   await expect(page.locator('#login-screen')).toBeVisible();
   await expect(page.locator('[data-demo-role]')).toHaveCount(0);

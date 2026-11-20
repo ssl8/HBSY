@@ -79,7 +79,27 @@ jobs:
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8088/api/audit)" = "401"
           curl -fsS http://127.0.0.1:8088/api/config | grep -q '"auth":"oidc"'
       - name: Run Browser E2E RBAC and Stage 4 Workflow Tests
-        run: npm run e2e
+        run: |
+          set -o pipefail
+          npm run e2e 2>&1 | tee e2e-output.log || {
+            {
+              echo "### Playwright E2E Failure Tail"
+              echo '```text'
+              tail -n 120 e2e-output.log
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          }
+      - name: Upload Playwright Failure Artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+            e2e-output.log
+          retention-days: 7
       - name: Print Service Logs on Failure
         if: failure()
         run: docker compose logs --no-color

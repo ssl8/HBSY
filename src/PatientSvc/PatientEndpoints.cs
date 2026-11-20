@@ -28,7 +28,7 @@ public static class PatientEndpoints
                 mode,
                 auth,
                 oidc = auth == "oidc"
-                    ? new { issuer, clientId, redirectUri = "/" }
+                    ? new { issuer, clientId, redirectUri = "/", jwksUri = "/api/oidc/certs" }
                     : null,
                 features = new
                 {
