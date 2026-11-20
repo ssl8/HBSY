@@ -34,7 +34,7 @@ public static class Db
             else if (values[i] is null or DBNull)
                 throw new ArgumentException($"SQL parametresi p{i} null olamaz; Db.TextOrDbNull / Db.BigintOrDbNull kullanın.", nameof(values));
             else
-                command.Parameters.AddWithValue($"p{i}", values[i]);
+                command.Parameters.AddWithValue($"p{i}", values[i]!);
         }
         return command;
     }
@@ -123,11 +123,25 @@ public static class Db
     }
 
     public static async Task<int> ExecuteAsync(
+        NpgsqlDataSource source, string sql, CancellationToken ct, params object?[] values)
+    {
+        await using var connection = await source.OpenConnectionAsync(ct);
+        return await ExecuteAsync(connection, null, sql, ct, values);
+    }
+
+    public static async Task<int> ExecuteAsync(
         NpgsqlConnection connection, NpgsqlTransaction? transaction, string sql,
         CancellationToken ct, params object?[] values)
     {
         await using var command = Command(connection, transaction, sql, values);
         return await command.ExecuteNonQueryAsync(ct);
+    }
+
+    public static async Task<long> ScalarLongAsync(
+        NpgsqlDataSource source, string sql, CancellationToken ct, params object?[] values)
+    {
+        await using var connection = await source.OpenConnectionAsync(ct);
+        return await ScalarLongAsync(connection, null, sql, ct, values);
     }
 
     public static async Task<long> ScalarLongAsync(
@@ -138,6 +152,13 @@ public static class Db
         var value = await command.ExecuteScalarAsync(ct);
         if (value is null or DBNull) return 0;
         return Convert.ToInt64(value, CultureInfo.InvariantCulture);
+    }
+
+    public static async Task<string?> ScalarStringAsync(
+        NpgsqlDataSource source, string sql, CancellationToken ct, params object?[] values)
+    {
+        await using var connection = await source.OpenConnectionAsync(ct);
+        return await ScalarStringAsync(connection, null, sql, ct, values);
     }
 
     public static async Task<string?> ScalarStringAsync(

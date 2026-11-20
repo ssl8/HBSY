@@ -45,19 +45,23 @@ jobs:
           node-version: '22'
       - name: Install Playwright
         run: |
-          npm ci
+          npm install --no-audit --no-fund
           npx playwright install --with-deps chromium
       - name: Prepare Environment
         run: |
-          cp .env.example .env
+          bash scripts/init-env.sh
           echo "HBYS_SEED_DEMO_DATA=true" >> .env
       - name: Build and Start Stack
         run: docker compose up -d --build
-      - name: Wait for Gateway, Keycloak, ConnectorSvc and IntegrationWorker Readiness
+      - name: Wait for Gateway, Keycloak, Microservices and IntegrationWorker Readiness
         run: |
-          for i in $(seq 1 90); do
+          for i in $(seq 1 120); do
             if curl -fsS http://127.0.0.1:8088/api/config >/dev/null \
               && curl -fsS http://127.0.0.1:8080/realms/hbys/.well-known/openid-configuration >/dev/null \
+              && curl -fsS http://127.0.0.1:8088/health/patient >/dev/null \
+              && curl -fsS http://127.0.0.1:8088/health/clinical >/dev/null \
+              && curl -fsS http://127.0.0.1:8088/health/integration >/dev/null \
+              && curl -fsS http://127.0.0.1:8088/health/audit >/dev/null \
               && curl -fsS http://127.0.0.1:8088/health/connector >/dev/null \
               && curl -fsS http://127.0.0.1:8088/health/worker >/dev/null; then
               exit 0

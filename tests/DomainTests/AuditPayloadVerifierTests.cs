@@ -6,7 +6,7 @@ namespace DomainTests;
 public sealed class AuditPayloadVerifierTests
 {
     private const string Canonical = """{"previous_hash":"0000000000000000000000000000000000000000000000000000000000000000","occurred_at":"2026-11-05T10:20:30.1234567+00:00","username":"demo","role":"doctor","action":"ORDER_CREATED","entity_type":"order","entity_id":"42","details":{"order_id":42,"critical":false}}""";
-    private static readonly DateTime OccurredAt = new(2026, 11, 5, 10, 20, 30, 123, DateTimeKind.Utc).AddTicks(4560);
+    private static readonly DateTime OccurredAt = new DateTime(2026, 11, 5, 10, 20, 30, 123, DateTimeKind.Utc).AddTicks(4560);
     private const string Details = """{"critical":false,"order_id":42}""";
 
     [Fact]
